@@ -1,3 +1,8 @@
+# Based on:
+# https://github.com/actions/starter-workflows/blob/main/ci/node.js.yml
+# https://dev.to/dancurtis/ci-cd-pipeline-with-netlify-and-github-actions-bcm
+# https://github.com/netlify/actions/tree/master/cli
+
 name: Build & Deploy
 
 on:
