@@ -8,6 +8,8 @@ interface RadixPreset {
   radix: number | null,
 }
 
+// TODO: Refactor to remove value properties
+const otherValue = "other";
 const radixPresets: RadixPreset[] = [
   {
     name: "Binary",
@@ -31,7 +33,7 @@ const radixPresets: RadixPreset[] = [
   },
   {
     name: "Other",
-    value: "other",
+    value: otherValue,
     radix: null,
   },
 ];
@@ -42,8 +44,8 @@ interface Props {
 }
 
 function RadixSelect({ radix, setRadix }: Props) {
-  const radixPresetValueToRadix = (value: string): number | null => (R.find(radixPreset => radixPreset.value === value, radixPresets) ?? radixPresets[3]).radix;
-  const radixPresetRadixToValue = (radix: number | null): string => (R.find(radixPreset => radixPreset.radix === radix, radixPresets) ?? radixPresets[3]).value;
+  const radixPresetValueToRadix = (value: string): number | null => R.find(radixPreset => radixPreset.value === value, radixPresets)?.radix ?? null;
+  const radixPresetRadixToValue = (radix: number | null): string => R.find(radixPreset => radixPreset.radix === radix, radixPresets)?.value ?? otherValue;
 
   return (
     <Select
