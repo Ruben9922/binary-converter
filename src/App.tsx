@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import * as R from "ramda";
 import {
   Code,
@@ -8,13 +8,22 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Text
+  Select,
+  Text,
 } from "@chakra-ui/react";
 
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-function isValid(value: string, inputRadix: number, outputRadix: number): boolean {
-  return isRadixValid(inputRadix) && isRadixValid(outputRadix) && isValueValid(value, inputRadix);
+function isValid(
+  value: string,
+  inputRadix: number,
+  outputRadix: number,
+): boolean {
+  return (
+    isRadixValid(inputRadix) &&
+    isRadixValid(outputRadix) &&
+    isValueValid(value, inputRadix)
+  );
 }
 
 function isRadixValid(radix: number): boolean {
@@ -23,14 +32,23 @@ function isRadixValid(radix: number): boolean {
 
 function isValueValid(value: string, inputRadix: number): boolean {
   if (inputRadix === 1) {
-    return R.all(digit => digit === "1", R.split("", value));
+    return R.all((digit) => digit === "1", R.split("", value));
   }
 
   // return value.split("").every(digit => alphabet.includes(digit) && alphabet.indexOf(digit) < inputRadix);
-  return R.all(digit => R.includes(digit, alphabet) && R.indexOf(digit, R.split("", alphabet)) < inputRadix, R.split("", value));
+  return R.all(
+    (digit) =>
+      R.includes(digit, alphabet) &&
+      R.indexOf(digit, R.split("", alphabet)) < inputRadix,
+    R.split("", value),
+  );
 }
 
-function convert(value: string, inputRadix: number, outputRadix: number): string | null {
+function convert(
+  value: string,
+  inputRadix: number,
+  outputRadix: number,
+): string | null {
   value = value.toUpperCase();
 
   if (!isValid(value, inputRadix, outputRadix)) {
@@ -83,7 +101,9 @@ function App() {
   const [inputRadix, setInputRadix] = useState(2);
   const [outputRadix, setOutputRadix] = useState(16);
 
-  const allowedDigits = inputRadix === 1 ? ["1"] : R.split("", R.slice(0, inputRadix, alphabet));
+  const allowedDigits = inputRadix === 1
+    ? ["1"]
+    : R.split("", R.slice(0, inputRadix, alphabet));
 
   return (
     <>
@@ -91,7 +111,7 @@ function App() {
       <Input
         value={value}
         placeholder="Input"
-        onChange={event => setValue(event.target.value)}
+        onChange={(event) => setValue(event.target.value)}
         isInvalid={!isValueValid(value, inputRadix)}
       />
       <Text>Allowed digits: {R.join(", ", allowedDigits)}</Text>
@@ -126,7 +146,9 @@ function App() {
           <NumberDecrementStepper />
         </NumberInputStepper>
       </NumberInput>
-      <Text>Output: <Code>{convert(value, inputRadix, outputRadix)}</Code></Text>
+      <Text>
+        Output: <Code>{convert(value, inputRadix, outputRadix)}</Code>
+      </Text>
     </>
   );
 }
