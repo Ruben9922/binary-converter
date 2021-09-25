@@ -170,7 +170,13 @@ function App() {
           </SimpleGrid>
 
           <Text>
-            Output: <Code>{convert(value, inputRadix, outputRadix)}</Code>
+            Output:
+            {" "}
+            {isValid(value, inputRadix, outputRadix) ? (
+              <Code>{convert(value, inputRadix, outputRadix)}</Code>
+            ) : (
+              <em>(none)</em>
+            )}
           </Text>
         </VStack>
       </Container>
