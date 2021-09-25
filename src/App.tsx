@@ -131,7 +131,7 @@ function App() {
               isInvalid={!isValueValid(value, inputRadix)}
             />
             <FormHelperText>
-              Allowed digits: {R.isEmpty(allowedDigits) ? "(none)" : R.join(", ", allowedDigits)}
+              Allowed digits: {R.isEmpty(allowedDigits) ? <em>(none)</em> : R.join(", ", allowedDigits)}
             </FormHelperText>
           </FormControl>
 
