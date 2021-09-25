@@ -4,6 +4,7 @@ import {
   Code,
   Container,
   FormControl,
+  FormErrorMessage,
   FormHelperText,
   FormLabel,
   Heading,
@@ -15,53 +16,16 @@ import {
 import RadixSelect from "./RadixSelect";
 import RadixInput from "./RadixInput";
 
+// TODO: Could make this an array instead of a string
 // noinspection SpellCheckingInspection
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-function isValid(value: string, inputRadix: number | null, outputRadix: number | null): boolean {
-  return (
-    isRadixValid(inputRadix) &&
-    isRadixValid(outputRadix) &&
-    isValueValid(value, inputRadix)
-  );
-}
-
-function isRadixValid(radix: number | null): boolean {
-  return radix !== null && radix > 0 && radix <= alphabet.length;
-}
-
-function isValueValid(value: string, inputRadix: number | null): boolean {
-  if (R.isEmpty(value)) {
-    return false;
-  }
-
-  if (inputRadix === null) {
-    return true;
-  }
-
-  if (inputRadix === 1) {
-    return R.all((digit) => digit === "1", R.split("", value));
-  }
-
-  // return value.split("").every(digit => alphabet.includes(digit) && alphabet.indexOf(digit) < inputRadix);
-  return R.all(
-    (digit) =>
-      R.includes(digit, alphabet) &&
-      R.indexOf(digit, R.split("", alphabet)) < inputRadix,
-    R.split("", value),
-  );
-}
 
 function convert(
   value: string,
   inputRadix: number | null,
   outputRadix: number | null,
-): string | null {
+): string {
   value = value.toUpperCase();
-
-  if (!isValid(value, inputRadix, outputRadix)) {
-    return null;
-  }
 
   const decimalValue = convertToDecimal(value, inputRadix!);
   const outputString = convertFromDecimal(decimalValue, outputRadix!);
@@ -115,6 +79,37 @@ function App() {
       ? ["1"]
       : R.split("", R.slice(0, inputRadix, alphabet))
   );
+  const allowedDigitsString = R.isEmpty(allowedDigits) ? <em>(none)</em> : R.join(", ", allowedDigits);
+
+  const validateValue = (): string => {
+    if (R.isEmpty(value)) {
+      return "Value cannot be empty.";
+    }
+
+    if (!R.isEmpty(R.difference(R.split("", value), allowedDigits))) {
+      return `Value may only contain the following digits: ${allowedDigitsString}.`;
+    }
+
+    return "";
+  };
+
+  const validateRadix = (radix: number | null): string => {
+    if (radix === null) {
+      return "Radix cannot be empty.";
+    }
+
+    if (radix <= 0) {
+      return "Radix must be greater than zero.";
+    }
+
+    if (radix > alphabet.length) {
+      return `Radix must be less than or equal to ${alphabet.length}`;
+    }
+
+    return "";
+  };
+
+  const isValid = (): boolean => !validateRadix(inputRadix) && !validateRadix(outputRadix) && !validateValue();
 
   return (
     <>
@@ -123,7 +118,7 @@ function App() {
         <Heading mb={6}>Binary Converter</Heading>
 
         <VStack spacing={5} align="stretch">
-          <FormControl id="value">
+          <FormControl id="value" isInvalid={isValueDirty && !!validateValue()}>
             <FormLabel>Value</FormLabel>
             <Input
               value={value}
@@ -132,27 +127,26 @@ function App() {
                 setValue(event.target.value);
                 setIsValueDirty(true);
               }}
-              isInvalid={isValueDirty && !isValueValid(value, inputRadix)}
             />
-            <FormHelperText>
-              Allowed digits: {R.isEmpty(allowedDigits) ? <em>(none)</em> : R.join(", ", allowedDigits)}
-            </FormHelperText>
+            <FormHelperText>May only contain the following digits: {allowedDigitsString}.</FormHelperText>
+            <FormErrorMessage>{validateValue()}</FormErrorMessage>
           </FormControl>
 
+          {/*todo: untouched state for radix preset selects*/}
           <SimpleGrid columns={2} spacing={2}>
             <FormControl id="input-radix-preset">
               <FormLabel>Input radix preset</FormLabel>
               <RadixSelect radix={inputRadix} setRadix={setInputRadix} />
             </FormControl>
-            <FormControl id="input-radix">
+            <FormControl id="input-radix" isInvalid={!!validateRadix(inputRadix)}>
               <FormLabel>Input radix</FormLabel>
               <RadixInput
                 radix={inputRadix}
                 setRadix={setInputRadix}
                 alphabet={alphabet}
-                valid={isRadixValid(inputRadix)}
               />
               <FormHelperText>Any integer between 1 and 36 (inclusive).</FormHelperText>
+              <FormErrorMessage>{validateRadix(inputRadix)}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>
 
@@ -161,22 +155,22 @@ function App() {
               <FormLabel>Output radix preset</FormLabel>
               <RadixSelect radix={outputRadix} setRadix={setOutputRadix} />
             </FormControl>
-            <FormControl id="output-radix">
+            <FormControl id="output-radix" isInvalid={!!validateRadix(outputRadix)}>
               <FormLabel>Output radix</FormLabel>
               <RadixInput
                 radix={outputRadix}
                 setRadix={setOutputRadix}
                 alphabet={alphabet}
-                valid={isRadixValid(outputRadix)}
               />
               <FormHelperText>Any integer between 1 and 36 (inclusive).</FormHelperText>
+              <FormErrorMessage>{validateRadix(outputRadix)}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>
 
           <Text>
             Output:
             {" "}
-            {isValid(value, inputRadix, outputRadix) ? (
+            {isValid() ? (
               <Code>{convert(value, inputRadix, outputRadix)}</Code>
             ) : (
               <em>(none)</em>

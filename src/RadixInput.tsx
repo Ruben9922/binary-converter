@@ -11,17 +11,15 @@ interface Props {
   radix: number | null,
   setRadix: (updatedRadix: number | null) => void,
   alphabet: string,
-  valid: boolean,
 }
 
-function RadixInput({ radix, setRadix, alphabet, valid }: Props) {
+function RadixInput({ radix, setRadix, alphabet }: Props) {
   return (
     <NumberInput
       value={radix === null || isNaN(radix) ? "" : radix}
       min={1}
       max={alphabet.length}
       onChange={(_, updatedRadix) => setRadix(updatedRadix)}
-      isInvalid={!valid}
     >
       <NumberInputField />
       <NumberInputStepper>
