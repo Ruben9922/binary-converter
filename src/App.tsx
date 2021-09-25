@@ -8,17 +8,13 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Select,
   Text,
 } from "@chakra-ui/react";
+import RadixSelect from "./RadixSelect";
 
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-function isValid(
-  value: string,
-  inputRadix: number,
-  outputRadix: number,
-): boolean {
+function isValid(value: string, inputRadix: number | null, outputRadix: number | null): boolean {
   return (
     isRadixValid(inputRadix) &&
     isRadixValid(outputRadix) &&
@@ -26,11 +22,15 @@ function isValid(
   );
 }
 
-function isRadixValid(radix: number): boolean {
-  return radix > 0 && radix <= alphabet.length;
+function isRadixValid(radix: number | null): boolean {
+  return radix !== null && radix > 0 && radix <= alphabet.length;
 }
 
-function isValueValid(value: string, inputRadix: number): boolean {
+function isValueValid(value: string, inputRadix: number | null): boolean {
+  if (inputRadix === null) {
+    return true;
+  }
+
   if (inputRadix === 1) {
     return R.all((digit) => digit === "1", R.split("", value));
   }
@@ -46,8 +46,8 @@ function isValueValid(value: string, inputRadix: number): boolean {
 
 function convert(
   value: string,
-  inputRadix: number,
-  outputRadix: number,
+  inputRadix: number | null,
+  outputRadix: number | null,
 ): string | null {
   value = value.toUpperCase();
 
@@ -55,8 +55,8 @@ function convert(
     return null;
   }
 
-  const decimalValue = convertToDecimal(value, inputRadix);
-  const outputString = convertFromDecimal(decimalValue, outputRadix);
+  const decimalValue = convertToDecimal(value, inputRadix!);
+  const outputString = convertFromDecimal(decimalValue, outputRadix!);
 
   return outputString;
 }
@@ -98,12 +98,14 @@ function convertFromDecimal(decimalValue: number, radix: number): string {
 
 function App() {
   const [value, setValue] = useState("");
-  const [inputRadix, setInputRadix] = useState(2);
-  const [outputRadix, setOutputRadix] = useState(16);
+  const [inputRadix, setInputRadix] = useState<number | null>(2);
+  const [outputRadix, setOutputRadix] = useState<number | null>(16);
 
-  const allowedDigits = inputRadix === 1
-    ? ["1"]
-    : R.split("", R.slice(0, inputRadix, alphabet));
+  const allowedDigits = inputRadix === null ? [] : (
+    inputRadix === 1
+      ? ["1"]
+      : R.split("", R.slice(0, inputRadix, alphabet))
+  );
 
   return (
     <>
@@ -114,14 +116,10 @@ function App() {
         onChange={(event) => setValue(event.target.value)}
         isInvalid={!isValueValid(value, inputRadix)}
       />
-      <Text>Allowed digits: {R.join(", ", allowedDigits)}</Text>
-      {/*<Select placeholder="Select option">*/}
-      {/*  <option value="option1">Option 1</option>*/}
-      {/*  <option value="option2">Option 2</option>*/}
-      {/*  <option value="option3">Option 3</option>*/}
-      {/*</Select>*/}
+      <Text>Allowed digits: {R.isEmpty(allowedDigits) ? "(none)" : R.join(", ", allowedDigits)}</Text>
+      <RadixSelect radix={inputRadix} setRadix={setInputRadix} />
       <NumberInput
-        value={inputRadix}
+        value={inputRadix === null || isNaN(inputRadix) ? undefined : inputRadix}
         min={1}
         max={alphabet.length}
         onChange={(_, updatedInputRadix) => setInputRadix(updatedInputRadix)}
@@ -133,8 +131,9 @@ function App() {
           <NumberDecrementStepper />
         </NumberInputStepper>
       </NumberInput>
+      <RadixSelect radix={outputRadix} setRadix={setOutputRadix} />
       <NumberInput
-        value={outputRadix}
+        value={outputRadix === null || isNaN(outputRadix) ? undefined : outputRadix}
         min={1}
         max={alphabet.length}
         onChange={(_, updatedOutputRadix) => setOutputRadix(updatedOutputRadix)}
