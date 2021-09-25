@@ -44,7 +44,6 @@ function RadixSelect({ radix, setRadix }: Props) {
     <Select
       value={radixPresetRadixToValue(radix)}
       onChange={event => setRadix(radixPresetValueToRadix(event.target.value))}
-      placeholder="Select radix preset"
     >
       {radixPresets.map(radixPreset => (
         <option value={radixPreset.value}>{radixPreset.name}</option>
