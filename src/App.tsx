@@ -20,6 +20,10 @@ function isRadixValid(radix: number | null): boolean {
 }
 
 function isValueValid(value: string, inputRadix: number | null): boolean {
+  if (R.isEmpty(value)) {
+    return false;
+  }
+
   if (inputRadix === null) {
     return true;
   }
