@@ -15,6 +15,11 @@ const radixPresets: RadixPreset[] = [
     radix: 2,
   },
   {
+    name: "Octal",
+    value: "octal",
+    radix: 8,
+  },
+  {
     name: "Decimal",
     value: "decimal",
     radix: 10,
