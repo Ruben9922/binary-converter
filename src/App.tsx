@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import RadixSelect from "./RadixSelect";
 
+// noinspection SpellCheckingInspection
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 function isValid(value: string, inputRadix: number | null, outputRadix: number | null): boolean {
