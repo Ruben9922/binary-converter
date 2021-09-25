@@ -1,16 +1,8 @@
 import React, { useState } from "react";
 import * as R from "ramda";
-import {
-  Code,
-  Input,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  Text,
-} from "@chakra-ui/react";
+import { Code, Input, Text } from "@chakra-ui/react";
 import RadixSelect from "./RadixSelect";
+import RadixInput from "./RadixInput";
 
 // noinspection SpellCheckingInspection
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -119,33 +111,18 @@ function App() {
       />
       <Text>Allowed digits: {R.isEmpty(allowedDigits) ? "(none)" : R.join(", ", allowedDigits)}</Text>
       <RadixSelect radix={inputRadix} setRadix={setInputRadix} />
-      <NumberInput
-        value={inputRadix === null || isNaN(inputRadix) ? undefined : inputRadix}
-        min={1}
-        max={alphabet.length}
-        onChange={(_, updatedInputRadix) => setInputRadix(updatedInputRadix)}
-        isInvalid={!isRadixValid(inputRadix)}
-      >
-        <NumberInputField />
-        <NumberInputStepper>
-          <NumberIncrementStepper />
-          <NumberDecrementStepper />
-        </NumberInputStepper>
-      </NumberInput>
+      <RadixInput
+        radix={inputRadix}
+        setRadix={setInputRadix}
+        alphabet={alphabet}
+        valid={isRadixValid(inputRadix)} />
       <RadixSelect radix={outputRadix} setRadix={setOutputRadix} />
-      <NumberInput
-        value={outputRadix === null || isNaN(outputRadix) ? undefined : outputRadix}
-        min={1}
-        max={alphabet.length}
-        onChange={(_, updatedOutputRadix) => setOutputRadix(updatedOutputRadix)}
-        isInvalid={!isRadixValid(outputRadix)}
-      >
-        <NumberInputField />
-        <NumberInputStepper>
-          <NumberIncrementStepper />
-          <NumberDecrementStepper />
-        </NumberInputStepper>
-      </NumberInput>
+      <RadixInput
+        radix={outputRadix}
+        setRadix={setOutputRadix}
+        alphabet={alphabet}
+        valid={isRadixValid(outputRadix)}
+      />
       <Text>
         Output: <Code>{convert(value, inputRadix, outputRadix)}</Code>
       </Text>
