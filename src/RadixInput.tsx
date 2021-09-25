@@ -17,7 +17,7 @@ interface Props {
 function RadixInput({ radix, setRadix, alphabet, valid }: Props) {
   return (
     <NumberInput
-      value={radix === null || isNaN(radix) ? undefined : radix}
+      value={radix === null || isNaN(radix) ? "" : radix}
       min={1}
       max={alphabet.length}
       onChange={(_, updatedRadix) => setRadix(updatedRadix)}
