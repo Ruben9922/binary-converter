@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import * as R from "ramda";
-import { Code, Input, Text } from "@chakra-ui/react";
+import {
+  Code,
+  Container,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  Input,
+  SimpleGrid,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import RadixSelect from "./RadixSelect";
 import RadixInput from "./RadixInput";
 
@@ -107,29 +118,62 @@ function App() {
   return (
     <>
       {/*<Header />*/}
-      <Input
-        value={value}
-        placeholder="Input"
-        onChange={(event) => setValue(event.target.value)}
-        isInvalid={!isValueValid(value, inputRadix)}
-      />
-      <Text>Allowed digits: {R.isEmpty(allowedDigits) ? "(none)" : R.join(", ", allowedDigits)}</Text>
-      <RadixSelect radix={inputRadix} setRadix={setInputRadix} />
-      <RadixInput
-        radix={inputRadix}
-        setRadix={setInputRadix}
-        alphabet={alphabet}
-        valid={isRadixValid(inputRadix)} />
-      <RadixSelect radix={outputRadix} setRadix={setOutputRadix} />
-      <RadixInput
-        radix={outputRadix}
-        setRadix={setOutputRadix}
-        alphabet={alphabet}
-        valid={isRadixValid(outputRadix)}
-      />
-      <Text>
-        Output: <Code>{convert(value, inputRadix, outputRadix)}</Code>
-      </Text>
+      <Container mt="30px">
+        <Heading mb={6}>Binary Converter</Heading>
+
+        <VStack spacing={5} align="stretch">
+          <FormControl id="value">
+            <FormLabel>Value</FormLabel>
+            <Input
+              value={value}
+              placeholder="Enter a value here"
+              onChange={(event) => setValue(event.target.value)}
+              isInvalid={!isValueValid(value, inputRadix)}
+            />
+            <FormHelperText>
+              Allowed digits: {R.isEmpty(allowedDigits) ? "(none)" : R.join(", ", allowedDigits)}
+            </FormHelperText>
+          </FormControl>
+
+          <SimpleGrid columns={2} spacing={2}>
+            <FormControl id="input-radix-preset">
+              <FormLabel>Input radix preset</FormLabel>
+              <RadixSelect radix={inputRadix} setRadix={setInputRadix} />
+            </FormControl>
+            <FormControl id="input-radix">
+              <FormLabel>Input radix</FormLabel>
+              <RadixInput
+                radix={inputRadix}
+                setRadix={setInputRadix}
+                alphabet={alphabet}
+                valid={isRadixValid(inputRadix)}
+              />
+              <FormHelperText>Any integer between 1 and 36 (inclusive).</FormHelperText>
+            </FormControl>
+          </SimpleGrid>
+
+          <SimpleGrid columns={2} spacing={2}>
+            <FormControl id="output-radix-preset">
+              <FormLabel>Output radix preset</FormLabel>
+              <RadixSelect radix={outputRadix} setRadix={setOutputRadix} />
+            </FormControl>
+            <FormControl id="output-radix">
+              <FormLabel>Output radix</FormLabel>
+              <RadixInput
+                radix={outputRadix}
+                setRadix={setOutputRadix}
+                alphabet={alphabet}
+                valid={isRadixValid(outputRadix)}
+              />
+              <FormHelperText>Any integer between 1 and 36 (inclusive).</FormHelperText>
+            </FormControl>
+          </SimpleGrid>
+
+          <Text>
+            Output: <Code>{convert(value, inputRadix, outputRadix)}</Code>
+          </Text>
+        </VStack>
+      </Container>
     </>
   );
 }
