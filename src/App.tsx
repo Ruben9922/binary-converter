@@ -106,6 +106,7 @@ function convertFromDecimal(decimalValue: number, radix: number): string {
 
 function App() {
   const [value, setValue] = useState("");
+  const [isValueDirty, setIsValueDirty] = useState(false);
   const [inputRadix, setInputRadix] = useState<number | null>(2);
   const [outputRadix, setOutputRadix] = useState<number | null>(16);
 
@@ -127,8 +128,11 @@ function App() {
             <Input
               value={value}
               placeholder="Enter a value here"
-              onChange={(event) => setValue(event.target.value)}
-              isInvalid={!isValueValid(value, inputRadix)}
+              onChange={(event) => {
+                setValue(event.target.value);
+                setIsValueDirty(true);
+              }}
+              isInvalid={isValueDirty && !isValueValid(value, inputRadix)}
             />
             <FormHelperText>
               Allowed digits: {R.isEmpty(allowedDigits) ? <em>(none)</em> : R.join(", ", allowedDigits)}
