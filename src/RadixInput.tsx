@@ -16,10 +16,10 @@ interface Props {
 function RadixInput({ radix, setRadix, alphabet }: Props) {
   return (
     <NumberInput
-      value={radix === null || isNaN(radix) ? "" : radix}
+      value={radix ?? ""}
       min={1}
       max={alphabet.length}
-      onChange={(_, updatedRadix) => setRadix(updatedRadix)}
+      onChange={(_, updatedRadix) => setRadix(updatedRadix === null || isNaN(updatedRadix) ? null : updatedRadix)}
     >
       <NumberInputField />
       <NumberInputStepper>

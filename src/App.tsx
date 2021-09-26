@@ -79,15 +79,18 @@ function App() {
       ? ["1"]
       : R.split("", R.slice(0, inputRadix, alphabet))
   );
-  const allowedDigitsString = R.isEmpty(allowedDigits) ? <em>(none)</em> : R.join(", ", allowedDigits);
 
   const validateValue = (): string => {
     if (R.isEmpty(value)) {
       return "Value cannot be empty.";
     }
 
+    if (validateRadix(inputRadix)) {
+      return "";
+    }
+
     if (!R.isEmpty(R.difference(R.split("", value), allowedDigits))) {
-      return `Value may only contain the following digits: ${allowedDigitsString}.`;
+      return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}.`;
     }
 
     return "";
@@ -128,7 +131,9 @@ function App() {
                 setIsValueDirty(true);
               }}
             />
-            <FormHelperText>May only contain the following digits: {allowedDigitsString}.</FormHelperText>
+            {R.isEmpty(allowedDigits) || (
+              <FormHelperText>May only contain the following digits: {R.join(", ", allowedDigits)}.</FormHelperText>
+            )}
             <FormErrorMessage>{validateValue()}</FormErrorMessage>
           </FormControl>
 
