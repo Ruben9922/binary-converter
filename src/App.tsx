@@ -89,7 +89,7 @@ function App() {
       return "";
     }
 
-    if (!R.isEmpty(R.difference(R.split("", value), allowedDigits))) {
+    if (!R.isEmpty(R.difference(R.split("", value.toUpperCase()), allowedDigits))) {
       return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}.`;
     }
 
