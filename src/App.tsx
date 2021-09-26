@@ -116,7 +116,6 @@ function App() {
 
   return (
     <>
-      {/*<Header />*/}
       <Container mt="30px">
         <Heading mb={6}>Binary Converter</Heading>
 
