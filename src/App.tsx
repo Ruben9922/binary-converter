@@ -131,10 +131,7 @@ function App() {
           // alignItems="baseline"
         >
           <Heading mb={6}>Binary Converter</Heading>
-          <Tooltip
-            label={"Toggle dark mode"}
-            closeOnClick={false}
-          >
+          <Tooltip label={"Toggle dark mode"}>
             <IconButton
               onClick={toggleColorMode}
               aria-label="Toggle dark mode"
