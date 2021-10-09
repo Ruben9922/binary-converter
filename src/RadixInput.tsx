@@ -8,9 +8,9 @@ import {
 } from "@chakra-ui/react";
 
 interface Props {
-  radix: number | null,
-  setRadix: (updatedRadix: number | null) => void,
-  alphabet: string,
+  radix: number | null;
+  setRadix: (updatedRadix: number | null) => void;
+  alphabet: string;
 }
 
 function RadixInput({ radix, setRadix, alphabet }: Props) {

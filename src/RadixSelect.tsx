@@ -3,9 +3,9 @@ import { Select } from "@chakra-ui/react";
 import * as R from "ramda";
 
 interface RadixPreset {
-  name: string,
-  value: string,
-  radix: number | null,
+  name: string;
+  value: string;
+  radix: number | null;
 }
 
 // TODO: Refactor to remove value properties
@@ -39,8 +39,8 @@ const radixPresets: RadixPreset[] = [
 ];
 
 interface Props {
-  radix: number | null,
-  setRadix: (updatedRadix: number | null) => void,
+  radix: number | null;
+  setRadix: (updatedRadix: number | null) => void;
 }
 
 function RadixSelect({ radix, setRadix }: Props) {
