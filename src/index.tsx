@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import { extendTheme } from "@chakra-ui/react";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
@@ -14,10 +14,15 @@ const theme = extendTheme({
     heading: "Inter",
     body: "Inter",
   },
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: false,
+  }
 });
 
 ReactDOM.render(
   <React.StrictMode>
+    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
     <ChakraProvider theme={theme}>
       <App />
     </ChakraProvider>

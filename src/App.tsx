@@ -7,14 +7,19 @@ import {
   FormErrorMessage,
   FormHelperText,
   FormLabel,
+  Grid,
   Heading,
+  IconButton,
   Input,
   SimpleGrid,
+  Tooltip,
+  useColorMode,
   VStack,
 } from "@chakra-ui/react";
 import RadixSelect from "./RadixSelect";
 import RadixInput from "./RadixInput";
 import Output from "./Output";
+import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 
 // TODO: Could make this an array instead of a string
 // noinspection SpellCheckingInspection
@@ -74,6 +79,8 @@ function App() {
   const [inputRadix, setInputRadix] = useState<number | null>(2);
   const [outputRadix, setOutputRadix] = useState<number | null>(16);
 
+  const { colorMode, toggleColorMode } = useColorMode();
+
   const allowedDigits = inputRadix === null ? [] : (
     inputRadix === 1
       ? ["1"]
@@ -118,7 +125,23 @@ function App() {
   return (
     <>
       <Container mt="30px">
-        <Heading mb={6}>Binary Converter</Heading>
+        <Grid
+          gridTemplateColumns="1fr auto"
+          columnGap={2}
+          // alignItems="baseline"
+        >
+          <Heading mb={6}>Binary Converter</Heading>
+          <Tooltip
+            label={"Toggle dark mode"}
+            closeOnClick={false}
+          >
+            <IconButton
+              onClick={toggleColorMode}
+              aria-label="Toggle dark mode"
+              icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+            />
+          </Tooltip>
+        </Grid>
 
         <VStack spacing={5} align="stretch">
           <FormControl id="value" isInvalid={isValueDirty && !!validateValue()}>
