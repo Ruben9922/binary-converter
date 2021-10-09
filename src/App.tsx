@@ -180,8 +180,14 @@ function App() {
           </SimpleGrid>
 
           {isValid && (
-            <Grid gridTemplateColumns="1fr auto" columnGap={2} alignItems="center">
-              <Code fontSize="4xl" noOfLines={10}>{outputValue}</Code>
+            <Grid
+              gridTemplateColumns="1fr auto"
+              columnGap={2}
+              alignItems="center"
+            >
+              <Code fontSize="4xl" noOfLines={10}>
+                {outputValue}
+              </Code>
               <Tooltip
                 label={hasCopied ? "Copied!" : "Copy to clipboard"}
                 closeOnClick={false}
