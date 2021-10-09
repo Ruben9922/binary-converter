@@ -3,6 +3,7 @@ import * as R from "ramda";
 import {
   Code,
   Container,
+  Divider,
   FormControl,
   FormErrorMessage,
   FormHelperText,
@@ -12,6 +13,7 @@ import {
   IconButton,
   Input,
   SimpleGrid,
+  Text,
   Tooltip,
   useClipboard,
   VStack,
@@ -179,28 +181,33 @@ function App() {
             </FormControl>
           </SimpleGrid>
 
-          {isValid && (
-            <Grid
-              gridTemplateColumns="1fr auto"
-              columnGap={2}
-              alignItems="center"
-            >
-              <Code fontSize="4xl" noOfLines={10}>
-                {outputValue}
+          <Divider />
+          <Grid
+            gridTemplateColumns="1fr auto"
+            columnGap={2}
+            alignItems="center"
+          >
+            {isValid ? (
+              <Code fontSize="3xl" noOfLines={10}>
+                {outputValue ?? "(invalid input)"}
               </Code>
-              <Tooltip
-                label={hasCopied ? "Copied!" : "Copy to clipboard"}
-                closeOnClick={false}
-              >
-                <IconButton
-                  onClick={onCopy}
-                  disabled={!isValid}
-                  aria-label="Copy to clipboard"
-                  icon={<CopyIcon />}
-                />
-              </Tooltip>
-            </Grid>
-          )}
+            ) : (
+              <Text fontStyle="italic">
+                Output will appear here…
+              </Text>
+            )}
+            <Tooltip
+              label={hasCopied ? "Copied!" : "Copy to clipboard"}
+              closeOnClick={false}
+            >
+              <IconButton
+                onClick={onCopy}
+                disabled={!isValid}
+                aria-label="Copy to clipboard"
+                icon={<CopyIcon />}
+              />
+            </Tooltip>
+          </Grid>
         </VStack>
       </Container>
     </>
