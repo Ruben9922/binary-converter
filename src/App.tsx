@@ -129,6 +129,7 @@ function App() {
                 setValue(event.target.value);
                 setIsValueDirty(true);
               }}
+              autoComplete="off"
             />
             {R.isEmpty(allowedDigits) || (
               <FormHelperText>May only contain the following digits: {R.join(", ", allowedDigits)}.</FormHelperText>
