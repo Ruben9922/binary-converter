@@ -7,14 +7,18 @@ import {
   FormErrorMessage,
   FormHelperText,
   FormLabel,
+  Grid,
   Heading,
+  IconButton,
   Input,
   SimpleGrid,
-  Text,
+  Tooltip,
+  useClipboard,
   VStack,
 } from "@chakra-ui/react";
 import RadixSelect from "./RadixSelect";
 import RadixInput from "./RadixInput";
+import { CopyIcon } from "@chakra-ui/icons";
 
 // TODO: Could make this an array instead of a string
 // noinspection SpellCheckingInspection
@@ -112,7 +116,10 @@ function App() {
     return "";
   };
 
-  const isValid = (): boolean => !validateRadix(inputRadix) && !validateRadix(outputRadix) && !validateValue();
+  const isValid = !validateRadix(inputRadix) && !validateRadix(outputRadix) && !validateValue();
+
+  const outputValue = isValid ? convert(value, inputRadix, outputRadix) : null;
+  const { hasCopied, onCopy } = useClipboard(outputValue ?? "");
 
   return (
     <>
@@ -172,15 +179,22 @@ function App() {
             </FormControl>
           </SimpleGrid>
 
-          <Text>
-            Output:
-            {" "}
-            {isValid() ? (
-              <Code>{convert(value, inputRadix, outputRadix)}</Code>
-            ) : (
-              <em>(none)</em>
-            )}
-          </Text>
+          {isValid && (
+            <Grid gridTemplateColumns="1fr auto" columnGap={2} alignItems="center">
+              <Code fontSize="4xl" noOfLines={10}>{outputValue}</Code>
+              <Tooltip
+                label={hasCopied ? "Copied!" : "Copy to clipboard"}
+                closeOnClick={false}
+              >
+                <IconButton
+                  onClick={onCopy}
+                  disabled={!isValid}
+                  aria-label="Copy to clipboard"
+                  icon={<CopyIcon />}
+                />
+              </Tooltip>
+            </Grid>
+          )}
         </VStack>
       </Container>
     </>
