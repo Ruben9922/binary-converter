@@ -245,6 +245,27 @@ function App() {
     setOutputSignMode(null);
   }, [outputRadix]);
 
+  useEffect(() => {
+    if (signedMode) {
+      if (inputRadix === 2) {
+        setOutputRadix(10);
+      }
+      if (inputRadix === 10) {
+        setOutputRadix(2);
+      }
+    }
+  }, [inputRadix, signedMode]);
+  useEffect(() => {
+    if (signedMode) {
+      if (outputRadix === 2) {
+        setInputRadix(10);
+      }
+      if (outputRadix === 10) {
+        setInputRadix(2);
+      }
+    }
+  }, [outputRadix, signedMode]);
+
   return (
     <>
       <Container mt="30px">
