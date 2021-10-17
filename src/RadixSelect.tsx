@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Select } from "@chakra-ui/react";
 import * as R from "ramda";
 
@@ -10,7 +10,7 @@ interface RadixPreset {
 
 // TODO: Refactor to remove value properties
 const otherValue = "other";
-const radixPresets: RadixPreset[] = [
+const allRadixPresets: RadixPreset[] = [
   {
     name: "Binary",
     value: "binary",
@@ -41,11 +41,23 @@ const radixPresets: RadixPreset[] = [
 interface Props {
   radix: number | null;
   setRadix: (updatedRadix: number | null) => void;
+  signedMode: boolean;
 }
 
-function RadixSelect({ radix, setRadix }: Props) {
+function RadixSelect({ radix, setRadix, signedMode }: Props) {
+  const radixPresets = signedMode
+    ? R.filter(radixPreset => !signedMode || R.includes(radixPreset.radix, [2, 10]), allRadixPresets)
+    : allRadixPresets;
+
   const radixPresetValueToRadix = (value: string): number | null => R.find(radixPreset => radixPreset.value === value, radixPresets)?.radix ?? null;
   const radixPresetRadixToValue = (radix: number | null): string => R.find(radixPreset => radixPreset.radix === radix, radixPresets)?.value ?? otherValue;
+
+  const fixRadix = () => {
+    if (signedMode && radix !== 2 && radix !== 10) {
+      setRadix(radixPresets[0].radix);
+    }
+  };
+  useEffect(fixRadix, [radix, radixPresets, setRadix, signedMode]);
 
   return (
     <Select
