@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import * as R from "ramda";
 import {
+  Button,
+  ButtonGroup,
   Container,
   Divider,
   FormControl,
@@ -234,6 +236,20 @@ function App() {
   const isValid = !validateRadix(inputRadix) && !validateRadix(outputRadix) && !validateValue() && !validateSignMode(inputSignMode, inputRadix) && !validateSignMode(outputSignMode, outputRadix);
   const outputValue = isValid ? convert(value, inputRadix, outputRadix, signedMode, inputSignMode, outputSignMode) : null;
 
+  const swap = () => {
+    // Not sure if there is a better way to do this using callbacks
+    setInputRadix(prevInputRadix => {
+      let tempRadix: number | null = null;
+      setOutputRadix(prevOutputRadix => {
+        tempRadix = prevOutputRadix;
+        return prevInputRadix;
+      });
+      return tempRadix;
+    });
+
+    setValue(prevValue => outputValue ?? prevValue);
+  };
+
   useEffect(() => {
     setInputSignMode(null);
     setOutputSignMode(null);
@@ -393,6 +409,10 @@ function App() {
               <FormErrorMessage>{validateSignMode(outputSignMode, outputRadix)}</FormErrorMessage>
             </FormControl>
           )}
+
+          <ButtonGroup alignSelf="center">
+            <Button onClick={swap}>Swap</Button>
+          </ButtonGroup>
 
           <Divider />
           <Output outputValue={outputValue} />
