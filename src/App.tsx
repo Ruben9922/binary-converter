@@ -6,6 +6,7 @@ import {
   Container,
   Divider,
   FormControl,
+  FormControlProps,
   FormErrorMessage,
   FormHelperText,
   FormLabel,
@@ -25,6 +26,9 @@ import Output from "./Output";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { SignMode } from "./signMode";
 import SignModeRadioGroup from "./SignModeRadioGroup";
+import { AnimatePresence, motion } from "framer-motion";
+
+const MotionFormControl = motion<FormControlProps>(FormControl);
 
 // TODO: Could make this an array instead of a string
 // noinspection SpellCheckingInspection
@@ -333,17 +337,27 @@ function App() {
             <FormErrorMessage>{validateValue()}</FormErrorMessage>
           </FormControl>
 
-          {signedMode && inputRadix === 2 && (
-            <FormControl id="input-sign-mode" as="fieldset" isInvalid={!!validateSignMode(inputSignMode, inputRadix)}>
-              <FormLabel as="legend">Input sign mode</FormLabel>
-              <SignModeRadioGroup
-                signMode={inputSignMode}
-                setSignMode={setInputSignMode}
-              />
-              <FormHelperText>Select how negative values are represented in the input value.</FormHelperText>
-              <FormErrorMessage>{validateSignMode(inputSignMode, inputRadix)}</FormErrorMessage>
-            </FormControl>
-          )}
+          <AnimatePresence>
+            {signedMode && inputRadix === 2 && (
+              <MotionFormControl
+                id="input-sign-mode"
+                as="fieldset"
+                isInvalid={!!validateSignMode(inputSignMode, inputRadix)}
+                key="input-sign-mode"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <FormLabel as="legend">Input sign mode</FormLabel>
+                <SignModeRadioGroup
+                  signMode={inputSignMode}
+                  setSignMode={setInputSignMode}
+                />
+                <FormHelperText>Select how negative values are represented in the input value.</FormHelperText>
+                <FormErrorMessage>{validateSignMode(inputSignMode, inputRadix)}</FormErrorMessage>
+              </MotionFormControl>
+            )}
+          </AnimatePresence>
 
           {/*todo: untouched state for radix preset selects*/}
           <SimpleGrid columns={2} spacing={2}>
@@ -398,17 +412,27 @@ function App() {
             </FormControl>
           </SimpleGrid>
 
-          {signedMode && outputRadix === 2 && (
-            <FormControl id="output-sign-mode" as="fieldset" isInvalid={!!validateSignMode(outputSignMode, outputRadix)}>
-              <FormLabel as="legend">Output sign mode</FormLabel>
-              <SignModeRadioGroup
-                signMode={outputSignMode}
-                setSignMode={setOutputSignMode}
-              />
-              <FormHelperText>Select how negative values are represented in the output value.</FormHelperText>
-              <FormErrorMessage>{validateSignMode(outputSignMode, outputRadix)}</FormErrorMessage>
-            </FormControl>
-          )}
+          <AnimatePresence>
+            {signedMode && outputRadix === 2 && (
+              <MotionFormControl
+                id="output-sign-mode"
+                as="fieldset"
+                isInvalid={!!validateSignMode(outputSignMode, outputRadix)}
+                key="output-sign-mode"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <FormLabel as="legend">Output sign mode</FormLabel>
+                <SignModeRadioGroup
+                  signMode={outputSignMode}
+                  setSignMode={setOutputSignMode}
+                />
+                <FormHelperText>Select how negative values are represented in the output value.</FormHelperText>
+                <FormErrorMessage>{validateSignMode(outputSignMode, outputRadix)}</FormErrorMessage>
+              </MotionFormControl>
+            )}
+          </AnimatePresence>
 
           <ButtonGroup alignSelf="center">
             <Button onClick={swap}>Swap</Button>
