@@ -241,15 +241,10 @@ function App() {
   const outputValue = isValid ? convert(value, inputRadix, outputRadix, signedMode, inputSignMode, outputSignMode) : null;
 
   const swap = () => {
-    // Not sure if there is a better way to do this using callbacks
-    setInputRadix(prevInputRadix => {
-      let tempRadix: number | null = null;
-      setOutputRadix(prevOutputRadix => {
-        tempRadix = prevOutputRadix;
-        return prevInputRadix;
-      });
-      return tempRadix;
-    });
+    // I think separate variable is technically not necessary due to batched updates but is a bit safer
+    const tempRadix = inputRadix;
+    setInputRadix(outputRadix);
+    setOutputRadix(tempRadix);
 
     setValue(prevValue => outputValue ?? prevValue);
   };
