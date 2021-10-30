@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import * as R from "ramda";
 import {
   Button,
@@ -27,6 +27,7 @@ import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { SignMode } from "./signMode";
 import SignModeRadioGroup from "./SignModeRadioGroup";
 import { AnimatePresence, motion } from "framer-motion";
+import { useImmerReducer } from "use-immer";
 
 const MotionFormControl = motion<FormControlProps>(FormControl);
 
@@ -168,40 +169,131 @@ function convertFromDecimalUnsigned(decimalValue: number, radix: number): string
   return value;
 }
 
+interface State {
+  value: string;
+  isValueDirty: boolean;
+  inputRadix: number | null;
+  outputRadix: number | null;
+  signedMode: boolean;
+  inputSignMode: SignMode | null;
+  outputSignMode: SignMode | null;
+}
+
+type Action =
+  | { type: "set-value", value: string }
+  | { type: "set-input-radix", inputRadix: number | null }
+  | { type: "set-output-radix", outputRadix: number | null }
+  | { type: "set-signed-mode", signedMode: boolean }
+  | { type: "set-input-sign-mode", inputSignMode: SignMode | null }
+  | { type: "set-output-sign-mode", outputSignMode: SignMode | null }
+  | { type: "swap", outputValue: string | null };
+
+const initialState: State = {
+  value: "",
+  isValueDirty: false,
+  inputRadix: 2,
+  outputRadix: 16,
+  signedMode: false,
+  inputSignMode: null,
+  outputSignMode: null,
+};
+
+function reducer(draft: State, action: Action): void {
+  switch (action.type) {
+    case "set-value":
+      draft.value = action.value;
+      draft.isValueDirty = true;
+      return;
+    case "set-input-radix":
+      draft.inputRadix = action.inputRadix;
+
+      draft.inputSignMode = null;
+      draft.outputSignMode = null;
+
+      if (draft.signedMode) {
+        if (draft.inputRadix === 2) {
+          draft.outputRadix = 10;
+        }
+        if (draft.inputRadix === 10) {
+          draft.outputRadix = 2;
+        }
+      }
+
+      return;
+    case "set-output-radix":
+      draft.outputRadix = action.outputRadix;
+
+      draft.inputSignMode = null;
+      draft.outputSignMode = null;
+
+      if (draft.signedMode) {
+        if (draft.outputRadix === 2) {
+          draft.inputRadix = 10;
+        }
+        if (draft.outputRadix === 10) {
+          draft.inputRadix = 2;
+        }
+      }
+
+      return;
+    case "set-signed-mode":
+      draft.signedMode = action.signedMode;
+
+      draft.inputSignMode = null;
+      draft.outputSignMode = null;
+
+      return;
+    case "set-input-sign-mode":
+      draft.inputSignMode = action.inputSignMode;
+      return;
+    case "set-output-sign-mode":
+      draft.outputSignMode = action.outputSignMode;
+      return;
+    case "swap":
+      const tempRadix = draft.inputRadix;
+      draft.inputRadix = draft.outputRadix;
+      draft.outputRadix = tempRadix;
+
+      draft.value = action.outputValue ?? draft.value;
+
+      if (draft.signedMode) {
+        const tempSignMode = draft.inputSignMode;
+        draft.inputSignMode = draft.outputSignMode;
+        draft.outputSignMode = tempSignMode;
+      }
+
+      return;
+  }
+}
+
 function App() {
-  const [value, setValue] = useState("");
-  const [isValueDirty, setIsValueDirty] = useState(false);
-  const [inputRadix, setInputRadix] = useState<number | null>(2);
-  const [outputRadix, setOutputRadix] = useState<number | null>(16);
-  const [signedMode, setSignedMode] = useState(false);
-  const [inputSignMode, setInputSignMode] = useState<SignMode | null>(null);
-  const [outputSignMode, setOutputSignMode] = useState<SignMode | null>(null);
+  const [state, dispatch] = useImmerReducer(reducer, initialState);
 
   const { colorMode, toggleColorMode } = useColorMode();
 
-  const allowedDigits = inputRadix === null ? [] : (
-    inputRadix === 1
+  const allowedDigits = state.inputRadix === null ? [] : (
+    state.inputRadix === 1
       ? ["1"]
-      : R.split("", R.slice(0, inputRadix, alphabet))
+      : R.split("", R.slice(0, state.inputRadix, alphabet))
   );
 
   const validateValue = (): string => {
-    if (R.isEmpty(value)) {
+    if (R.isEmpty(state.value)) {
       return "Value cannot be empty.";
     }
 
-    if (validateRadix(inputRadix)) {
+    if (validateRadix(state.inputRadix)) {
       return "";
     }
 
     const containsOnlyAllowedDigits = (x: string): boolean => R.isEmpty(R.difference(R.split("", x.toUpperCase()), allowedDigits));
 
-    if (signedMode && inputRadix === 10) {
-      if (!containsOnlyAllowedDigits(value) && (R.head(value) !== "-" || R.isEmpty(R.tail(value)) || !containsOnlyAllowedDigits(R.tail(value)))) {
+    if (state.signedMode && state.inputRadix === 10) {
+      if (!containsOnlyAllowedDigits(state.value) && (R.head(state.value) !== "-" || R.isEmpty(R.tail(state.value)) || !containsOnlyAllowedDigits(R.tail(state.value)))) {
         return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}. Value may start with a hyphen (-).`;
       }
     } else {
-      if (!containsOnlyAllowedDigits(value)) {
+      if (!containsOnlyAllowedDigits(state.value)) {
         return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}.`;
       }
     }
@@ -214,7 +306,7 @@ function App() {
       return "Radix cannot be empty.";
     }
 
-    if (signedMode && radix !== 2 && radix !== 10) {
+    if (state.signedMode && radix !== 2 && radix !== 10) {
       return "Radix must be 2 or 10 in signed mode.";
     }
 
@@ -230,56 +322,23 @@ function App() {
   };
 
   const validateSignMode = (signMode: SignMode | null, radix: number | null): string => {
-    if (signedMode && radix === 2 && signMode === null) {
+    if (state.signedMode && radix === 2 && signMode === null) {
       return "Sign mode cannot be left blank.";
     }
 
     return "";
   };
 
-  const isValid = !validateRadix(inputRadix) && !validateRadix(outputRadix) && !validateValue() && !validateSignMode(inputSignMode, inputRadix) && !validateSignMode(outputSignMode, outputRadix);
-  const outputValue = isValid ? convert(value, inputRadix, outputRadix, signedMode, inputSignMode, outputSignMode) : null;
+  const isValid = !validateRadix(state.inputRadix) && !validateRadix(state.outputRadix) && !validateValue() && !validateSignMode(state.inputSignMode, state.inputRadix) && !validateSignMode(state.outputSignMode, state.outputRadix);
+  const outputValue = isValid ? convert(state.value, state.inputRadix, state.outputRadix, state.signedMode, state.inputSignMode, state.outputSignMode) : null;
 
-  const swap = () => {
-    // I think separate variable is technically not necessary due to batched updates but is a bit safer
-    const tempRadix = inputRadix;
-    setInputRadix(outputRadix);
-    setOutputRadix(tempRadix);
-
-    setValue(prevValue => outputValue ?? prevValue);
-  };
-
-  useEffect(() => {
-    setInputSignMode(null);
-    setOutputSignMode(null);
-  }, [signedMode]);
-  useEffect(() => {
-    setInputSignMode(null);
-  }, [inputRadix]);
-  useEffect(() => {
-    setOutputSignMode(null);
-  }, [outputRadix]);
-
-  useEffect(() => {
-    if (signedMode) {
-      if (inputRadix === 2) {
-        setOutputRadix(10);
-      }
-      if (inputRadix === 10) {
-        setOutputRadix(2);
-      }
-    }
-  }, [inputRadix, signedMode]);
-  useEffect(() => {
-    if (signedMode) {
-      if (outputRadix === 2) {
-        setInputRadix(10);
-      }
-      if (outputRadix === 10) {
-        setInputRadix(2);
-      }
-    }
-  }, [outputRadix, signedMode]);
+  const setValue = (value: string) => dispatch({ type: "set-value", value });
+  const setInputRadix = (inputRadix: number | null): void => dispatch({ type: "set-input-radix", inputRadix });
+  const setOutputRadix = (outputRadix: number | null): void => dispatch({ type: "set-output-radix", outputRadix });
+  const setSignedMode = (signedMode: boolean) => dispatch({ type: "set-signed-mode", signedMode });
+  const setInputSignMode = (inputSignMode: SignMode | null): void => dispatch({ type: "set-input-sign-mode", inputSignMode });
+  const setOutputSignMode = (outputSignMode: SignMode | null): void => dispatch({ type: "set-output-sign-mode", outputSignMode });
+  const swap = (): void => dispatch({ type: "swap", outputValue });
 
   return (
     <>
@@ -306,25 +365,22 @@ function App() {
             </FormLabel>
             <Switch
               id="signed-mode"
-              isChecked={signedMode}
+              isChecked={state.signedMode}
               onChange={event => setSignedMode(event.target.checked)}
             />
           </FormControl>
 
-          <FormControl id="value" isInvalid={isValueDirty && !!validateValue()}>
+          <FormControl id="value" isInvalid={state.isValueDirty && !!validateValue()}>
             <FormLabel>Value</FormLabel>
             <Input
-              value={value}
+              value={state.value}
               placeholder="Enter a value here"
-              onChange={(event) => {
-                setValue(event.target.value);
-                setIsValueDirty(true);
-              }}
+              onChange={(event) => setValue(event.target.value)}
               autoComplete="off"
             />
             {R.isEmpty(allowedDigits) || (
               <FormHelperText>
-                {signedMode && inputRadix === 10
+                {state.signedMode && state.inputRadix === 10
                   ? `May only contain the following digits: ${R.join(", ", allowedDigits)}. May start with a hyphen (-).`
                   : `May only contain the following digits: ${R.join(", ", allowedDigits)}.`}
               </FormHelperText>
@@ -333,11 +389,11 @@ function App() {
           </FormControl>
 
           <AnimatePresence>
-            {signedMode && inputRadix === 2 && (
+            {state.signedMode && state.inputRadix === 2 && (
               <MotionFormControl
                 id="input-sign-mode"
                 as="fieldset"
-                isInvalid={!!validateSignMode(inputSignMode, inputRadix)}
+                isInvalid={!!validateSignMode(state.inputSignMode, state.inputRadix)}
                 key="input-sign-mode"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -345,11 +401,11 @@ function App() {
               >
                 <FormLabel as="legend">Input sign mode</FormLabel>
                 <SignModeRadioGroup
-                  signMode={inputSignMode}
+                  signMode={state.inputSignMode}
                   setSignMode={setInputSignMode}
                 />
                 <FormHelperText>Select how negative values are represented in the input value.</FormHelperText>
-                <FormErrorMessage>{validateSignMode(inputSignMode, inputRadix)}</FormErrorMessage>
+                <FormErrorMessage>{validateSignMode(state.inputSignMode, state.inputRadix)}</FormErrorMessage>
               </MotionFormControl>
             )}
           </AnimatePresence>
@@ -359,25 +415,25 @@ function App() {
             <FormControl id="input-radix-preset">
               <FormLabel>Input radix preset</FormLabel>
               <RadixSelect
-                radix={inputRadix}
+                radix={state.inputRadix}
                 setRadix={setInputRadix}
-                signedMode={signedMode}
+                signedMode={state.signedMode}
               />
             </FormControl>
-            <FormControl id="input-radix" isInvalid={!!validateRadix(inputRadix)}>
+            <FormControl id="input-radix" isInvalid={!!validateRadix(state.inputRadix)}>
               <FormLabel>Input radix</FormLabel>
               <RadixInput
-                radix={inputRadix}
+                radix={state.inputRadix}
                 setRadix={setInputRadix}
                 alphabet={alphabet}
-                signedMode={signedMode}
+                signedMode={state.signedMode}
               />
               <FormHelperText>
-                {signedMode
+                {state.signedMode
                   ? "Radix must be 2 or 10 in signed mode."
                   : "Any integer between 1 and 36 (inclusive)."}
               </FormHelperText>
-              <FormErrorMessage>{validateRadix(inputRadix)}</FormErrorMessage>
+              <FormErrorMessage>{validateRadix(state.inputRadix)}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>
 
@@ -385,34 +441,34 @@ function App() {
             <FormControl id="output-radix-preset">
               <FormLabel>Output radix preset</FormLabel>
               <RadixSelect
-                radix={outputRadix}
+                radix={state.outputRadix}
                 setRadix={setOutputRadix}
-                signedMode={signedMode}
+                signedMode={state.signedMode}
               />
             </FormControl>
-            <FormControl id="output-radix" isInvalid={!!validateRadix(outputRadix)}>
+            <FormControl id="output-radix" isInvalid={!!validateRadix(state.outputRadix)}>
               <FormLabel>Output radix</FormLabel>
               <RadixInput
-                radix={outputRadix}
+                radix={state.outputRadix}
                 setRadix={setOutputRadix}
                 alphabet={alphabet}
-                signedMode={signedMode}
+                signedMode={state.signedMode}
               />
               <FormHelperText>
-                {signedMode
+                {state.signedMode
                   ? "Radix must be 2 or 10 in signed mode."
                   : "Any integer between 1 and 36 (inclusive)."}
               </FormHelperText>
-              <FormErrorMessage>{validateRadix(outputRadix)}</FormErrorMessage>
+              <FormErrorMessage>{validateRadix(state.outputRadix)}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>
 
           <AnimatePresence>
-            {signedMode && outputRadix === 2 && (
+            {state.signedMode && state.outputRadix === 2 && (
               <MotionFormControl
                 id="output-sign-mode"
                 as="fieldset"
-                isInvalid={!!validateSignMode(outputSignMode, outputRadix)}
+                isInvalid={!!validateSignMode(state.outputSignMode, state.outputRadix)}
                 key="output-sign-mode"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -420,11 +476,11 @@ function App() {
               >
                 <FormLabel as="legend">Output sign mode</FormLabel>
                 <SignModeRadioGroup
-                  signMode={outputSignMode}
+                  signMode={state.outputSignMode}
                   setSignMode={setOutputSignMode}
                 />
                 <FormHelperText>Select how negative values are represented in the output value.</FormHelperText>
-                <FormErrorMessage>{validateSignMode(outputSignMode, outputRadix)}</FormErrorMessage>
+                <FormErrorMessage>{validateSignMode(state.outputSignMode, state.outputRadix)}</FormErrorMessage>
               </MotionFormControl>
             )}
           </AnimatePresence>
