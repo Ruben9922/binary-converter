@@ -8,7 +8,6 @@ interface RadixPreset {
   radix: number | null;
 }
 
-// TODO: Refactor to remove value properties
 const otherValue = "other";
 const allRadixPresets: RadixPreset[] = [
   {
