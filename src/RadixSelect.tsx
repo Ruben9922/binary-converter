@@ -1,70 +1,25 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Select } from "@chakra-ui/react";
 import * as R from "ramda";
-
-interface RadixPreset {
-  name: string;
-  value: string;
-  radix: number | null;
-}
-
-const otherValue = "other";
-const allRadixPresets: RadixPreset[] = [
-  {
-    name: "Binary",
-    value: "binary",
-    radix: 2,
-  },
-  {
-    name: "Octal",
-    value: "octal",
-    radix: 8,
-  },
-  {
-    name: "Decimal",
-    value: "decimal",
-    radix: 10,
-  },
-  {
-    name: "Hexadecimal",
-    value: "hexadecimal",
-    radix: 16,
-  },
-  {
-    name: "Other",
-    value: otherValue,
-    radix: null,
-  },
-];
+import { RadixPreset, radixPresets } from "./radixPreset";
 
 interface Props {
   radix: number | null;
   setRadix: (updatedRadix: number | null) => void;
-  signedMode: boolean;
+  filteredRadixPresets: RadixPreset[];
 }
 
-function RadixSelect({ radix, setRadix, signedMode }: Props) {
-  const radixPresets = signedMode
-    ? R.filter(radixPreset => !signedMode || R.includes(radixPreset.radix, [2, 10]), allRadixPresets)
-    : allRadixPresets;
-
-  const radixPresetValueToRadix = (value: string): number | null => R.find(radixPreset => radixPreset.value === value, radixPresets)?.radix ?? null;
-  const radixPresetRadixToValue = (radix: number | null): string => R.find(radixPreset => radixPreset.radix === radix, radixPresets)?.value ?? otherValue;
-
-  // Not sure whether to move this to the reducer in App
-  const fixRadix = () => {
-    if (signedMode && radix !== 2 && radix !== 10) {
-      setRadix(radixPresets[0].radix);
-    }
-  };
-  useEffect(fixRadix, [radix, radixPresets, setRadix, signedMode]);
+function RadixSelect({ radix, setRadix, filteredRadixPresets }: Props) {
+  const otherRadixPreset = R.find(radixPreset => radixPreset.radix === null, radixPresets)!;
+  const radixPresetValueToRadix = (value: string): number | null => R.find(radixPreset => radixPreset.value === value, radixPresets)?.radix ?? otherRadixPreset.radix;
+  const radixPresetRadixToValue = (radix: number | null): string => R.find(radixPreset => radixPreset.radix === radix, radixPresets)?.value ?? otherRadixPreset.value;
 
   return (
     <Select
       value={radixPresetRadixToValue(radix)}
       onChange={event => setRadix(radixPresetValueToRadix(event.target.value))}
     >
-      {radixPresets.map(radixPreset => (
+      {filteredRadixPresets.map(radixPreset => (
         <option key={radixPreset.value} value={radixPreset.value}>
           {radixPreset.name}
         </option>

@@ -31,6 +31,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useImmerReducer } from "use-immer";
 import { FaGithub } from "react-icons/fa";
 import { VscArrowSwap } from "react-icons/vsc";
+import { radixPresets } from "./radixPreset";
 
 const MotionFormControl = motion<FormControlProps>(FormControl);
 
@@ -245,6 +246,24 @@ function reducer(draft: State, action: Action): void {
       draft.inputSignMode = null;
       draft.outputSignMode = null;
 
+      // TODO: Refactor this - don't need to call filterRadixPresets for this
+      const allowedRadices = R.map(radixPreset => radixPreset.radix, filterRadixPresets(action.signedMode));
+
+      if (action.signedMode) {
+        if (!R.includes(draft.inputRadix, allowedRadices)) {
+          draft.inputRadix = allowedRadices[0];
+        }
+
+        if (!R.includes(draft.outputRadix, allowedRadices)) {
+          draft.outputRadix = allowedRadices[0];
+        }
+
+        if (draft.inputRadix === draft.outputRadix) {
+          draft.inputRadix = allowedRadices[0];
+          draft.outputRadix = allowedRadices[1];
+        }
+      }
+
       return;
     case "set-input-sign-mode":
       draft.inputSignMode = action.inputSignMode;
@@ -267,6 +286,12 @@ function reducer(draft: State, action: Action): void {
 
       return;
   }
+}
+
+function filterRadixPresets(signedMode: boolean) {
+  return signedMode
+    ? R.filter(radixPreset => !signedMode || R.includes(radixPreset.radix, [2, 10]), radixPresets)
+    : radixPresets;
 }
 
 function App() {
@@ -334,6 +359,7 @@ function App() {
 
   const isValid = !validateRadix(state.inputRadix) && !validateRadix(state.outputRadix) && !validateValue() && !validateSignMode(state.inputSignMode, state.inputRadix) && !validateSignMode(state.outputSignMode, state.outputRadix);
   const outputValue = isValid ? convert(state.value, state.inputRadix, state.outputRadix, state.signedMode, state.inputSignMode, state.outputSignMode) : null;
+  const filteredRadixPresets = filterRadixPresets(state.signedMode);
 
   const setValue = (value: string) => dispatch({ type: "set-value", value });
   const setInputRadix = (inputRadix: number | null): void => dispatch({ type: "set-input-radix", inputRadix });
@@ -434,7 +460,7 @@ function App() {
               <RadixSelect
                 radix={state.inputRadix}
                 setRadix={setInputRadix}
-                signedMode={state.signedMode}
+                filteredRadixPresets={filteredRadixPresets}
               />
             </FormControl>
             <FormControl id="input-radix" isInvalid={!!validateRadix(state.inputRadix)}>
@@ -460,7 +486,7 @@ function App() {
               <RadixSelect
                 radix={state.outputRadix}
                 setRadix={setOutputRadix}
-                signedMode={state.signedMode}
+                filteredRadixPresets={filteredRadixPresets}
               />
             </FormControl>
             <FormControl id="output-radix" isInvalid={!!validateRadix(state.outputRadix)}>
