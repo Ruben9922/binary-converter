@@ -30,6 +30,7 @@ import { SignMode } from "./signMode";
 import SignModeRadioGroup from "./SignModeRadioGroup";
 import { AnimatePresence, motion } from "framer-motion";
 import { useImmerReducer } from "use-immer";
+import { FaGithub } from "react-icons/fa";
 import { VscArrowSwap } from "react-icons/vsc";
 
 const MotionFormControl = motion<FormControlProps>(FormControl);
@@ -349,16 +350,30 @@ function App() {
         <Grid
           gridTemplateColumns="1fr auto"
           columnGap={2}
-          // alignItems="baseline"
+          mb={6}
+          alignItems="start"
         >
-          <Heading mb={6}>Binary Converter</Heading>
-          <Tooltip label={"Toggle dark mode"}>
-            <IconButton
-              onClick={toggleColorMode}
-              aria-label="Toggle dark mode"
-              icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
-            />
-          </Tooltip>
+          <Heading>Binary Converter</Heading>
+          <HStack>
+            <Tooltip label="GitHub repository">
+              <Link
+                href="https://github.com/Ruben9922/binary-converter"
+                isExternal
+              >
+                <IconButton
+                  icon={<FaGithub />}
+                  aria-label="GitHub repository"
+                />
+              </Link>
+            </Tooltip>
+            <Tooltip label="Toggle dark mode">
+              <IconButton
+                onClick={toggleColorMode}
+                icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+                aria-label="Toggle dark mode"
+              />
+            </Tooltip>
+          </HStack>
         </Grid>
 
         <VStack spacing={5} align="stretch">
