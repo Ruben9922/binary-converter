@@ -2,7 +2,6 @@ import React from "react";
 import * as R from "ramda";
 import {
   Button,
-  ButtonGroup,
   Container,
   Divider,
   FormControl,
@@ -503,9 +502,9 @@ function App() {
             )}
           </AnimatePresence>
 
-          <ButtonGroup alignSelf="center">
-            <Button onClick={swap} leftIcon={<VscArrowSwap />}>Swap</Button>
-          </ButtonGroup>
+          <Button onClick={swap} leftIcon={<VscArrowSwap />} alignSelf="center">
+            Swap
+          </Button>
 
           <Divider />
           <Output outputValue={outputValue} />
