@@ -52,6 +52,7 @@ function RadixSelect({ radix, setRadix, signedMode }: Props) {
   const radixPresetValueToRadix = (value: string): number | null => R.find(radixPreset => radixPreset.value === value, radixPresets)?.radix ?? null;
   const radixPresetRadixToValue = (radix: number | null): string => R.find(radixPreset => radixPreset.radix === radix, radixPresets)?.value ?? otherValue;
 
+  // Not sure whether to move this to the reducer in App
   const fixRadix = () => {
     if (signedMode && radix !== 2 && radix !== 10) {
       setRadix(radixPresets[0].radix);
