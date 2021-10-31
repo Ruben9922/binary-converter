@@ -12,8 +12,10 @@ import {
   FormLabel,
   Grid,
   Heading,
+  HStack,
   IconButton,
   Input,
+  Link,
   SimpleGrid,
   Switch,
   Tooltip,
@@ -28,6 +30,7 @@ import { SignMode } from "./signMode";
 import SignModeRadioGroup from "./SignModeRadioGroup";
 import { AnimatePresence, motion } from "framer-motion";
 import { useImmerReducer } from "use-immer";
+import { VscArrowSwap } from "react-icons/vsc";
 
 const MotionFormControl = motion<FormControlProps>(FormControl);
 
@@ -486,7 +489,7 @@ function App() {
           </AnimatePresence>
 
           <ButtonGroup alignSelf="center">
-            <Button onClick={swap}>Swap</Button>
+            <Button onClick={swap} leftIcon={<VscArrowSwap />}>Swap</Button>
           </ButtonGroup>
 
           <Divider />
