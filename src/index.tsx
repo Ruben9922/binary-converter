@@ -8,6 +8,10 @@ import { extendTheme } from "@chakra-ui/react";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/700.css";
+import ReactGA from "react-ga4";
+
+ReactGA.initialize("G-L13K30NS4G");
+ReactGA.send("pageview");
 
 const theme = extendTheme({
   fonts: {
