@@ -7,13 +7,24 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/build-deploy.yml'
+      - 'web-app/**'
   pull_request:
-    branches: [ master ]
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/build-deploy.yml'
+      - 'web-app/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web-app
 
     steps:
     - name: Checkout code
@@ -23,6 +34,7 @@ jobs:
       with:
         node-version: lts/*
         cache: 'npm'
+        cache-dependency-path: 'web-app/package-lock.json'
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
