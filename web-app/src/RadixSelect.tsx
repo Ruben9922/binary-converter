@@ -1,7 +1,7 @@
 import React from "react";
 import { Select } from "@chakra-ui/react";
 import * as R from "ramda";
-import { RadixPreset, radixPresets } from "./radixPreset";
+import { RadixPreset, radixPresets } from "./core/radixPreset";
 
 interface Props {
   radix: number | null;

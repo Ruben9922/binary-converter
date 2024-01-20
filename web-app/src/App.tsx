@@ -21,176 +21,30 @@ import {
   useColorMode,
   VStack,
 } from "@chakra-ui/react";
+import alphabet from "./core/alphabet";
 import RadixSelect from "./RadixSelect";
 import RadixInput from "./RadixInput";
 import Output from "./Output";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
-import { SignMode } from "./signMode";
+import { SignMode } from "./core/signMode";
 import SignModeRadioGroup from "./SignModeRadioGroup";
 import { AnimatePresence, motion } from "framer-motion";
 import { useImmerReducer } from "use-immer";
 import { FaGithub } from "react-icons/fa";
 import { VscArrowSwap } from "react-icons/vsc";
-import { radixPresets } from "./radixPreset";
+import { getFilteredRadixPresets } from "./core/radixPreset";
+import { convert } from "./core/convert";
+import State from "./core/state";
+import reducer from "./core/reducer";
+import {
+  computeAllowedDigits,
+  validate,
+  validateInputRadix,
+  validateInputSignMode, validateOutputRadix, validateOutputSignMode,
+  validateValue,
+} from "./core/validate";
 
 const MotionFormControl = motion<FormControlProps>(FormControl);
-
-// TODO: Could make this an array instead of a string
-// noinspection SpellCheckingInspection
-const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-interface SignedDecimalValue {
-  value: number;
-  isNegative: boolean;
-}
-
-function convert(
-  value: string,
-  inputRadix: number | null,
-  outputRadix: number | null,
-  signedMode: boolean,
-  inputSignMode: SignMode | null,
-  outputSignMode: SignMode | null,
-): string {
-  value = value.toUpperCase();
-
-  const decimalValue = convertToDecimal(value, inputRadix!, signedMode, inputSignMode);
-  const outputString = convertFromDecimal(decimalValue, outputRadix!, signedMode, outputSignMode);
-
-  return outputString;
-}
-
-function convertToDecimal(value: string, radix: number, signedMode: boolean, inputSignMode: SignMode | null): SignedDecimalValue {
-  if (signedMode) {
-    if (radix === 2) {
-      const unsignedDecimalValue = convertToDecimalUnsigned(value, radix);
-      // In all three of these signed number representations, the value is
-      // negative if and only if the first bit is 1, i.e. the unsigned decimal
-      // value is greater than or equal to 2^(N-1) (where N is the number of bits)
-      const isNegative = unsignedDecimalValue >= radix ** (value.length - 1);
-      switch (inputSignMode) {
-        case "ones-complement":
-          return {
-            value: isNegative
-              ? Math.abs(unsignedDecimalValue - ((radix ** value.length) - 1))
-              : unsignedDecimalValue,
-            isNegative,
-          };
-        case "twos-complement":
-          return {
-            value: isNegative
-              ? Math.abs(unsignedDecimalValue - (radix ** value.length))
-              : unsignedDecimalValue,
-            isNegative,
-          };
-        case "sign-and-magnitude":
-          return {
-            value: isNegative
-              ? Math.abs(unsignedDecimalValue - (radix ** (value.length - 1)))
-              : unsignedDecimalValue,
-            isNegative,
-          };
-      }
-    } else if (radix === 10) {
-      const isNegative = R.head(value) === "-";
-      return {
-        value: convertToDecimalUnsigned(isNegative ? R.tail(value) : value, radix),
-        isNegative,
-      };
-    }
-  }
-
-  return {
-    value: convertToDecimalUnsigned(value, radix),
-    isNegative: false,
-  };
-}
-
-function convertToDecimalUnsigned(value: string, radix: number): number {
-  if (radix === 1) {
-    return value.length;
-  }
-
-  return R.pipe(
-    R.split(""),
-    R.addIndex(R.map)((digit, index) => {
-      const decimalDigit = R.indexOf(digit, R.split("", alphabet));
-      const exponent = value.length - index - 1;
-      return decimalDigit * Math.pow(radix, exponent);
-    }),
-    R.sum,
-  )(value);
-}
-
-function convertFromDecimal(signedDecimalValue: SignedDecimalValue, radix: number, signedMode: boolean, outputSignMode: SignMode | null): string {
-  if (signedMode) {
-    if (radix === 2) {
-      if (signedDecimalValue.isNegative) {
-        // Could refactor to use bitwise NOT instead
-        let bitCount = Math.ceil(Math.log2(signedDecimalValue.value + 1));
-        if (outputSignMode !== "twos-complement" || signedDecimalValue.value !== radix ** (bitCount - 1)) {
-          bitCount++;
-        }
-        switch (outputSignMode) {
-          case "ones-complement":
-            return convertFromDecimalUnsigned(-signedDecimalValue.value + (radix ** bitCount) - 1, radix);
-          case "twos-complement":
-            return convertFromDecimalUnsigned(-signedDecimalValue.value + (radix ** bitCount), radix);
-          case "sign-and-magnitude":
-            return convertFromDecimalUnsigned(signedDecimalValue.value + (radix ** (bitCount - 1)), radix);
-        }
-      } else {
-        // If number is non-negative, prepend a zero to the output value because
-        // positive signed values always start with a zero
-        return `0${convertFromDecimalUnsigned(signedDecimalValue.value, radix)}`;
-      }
-    } else if (radix === 10) {
-      return signedDecimalValue.isNegative
-        ? `-${convertFromDecimalUnsigned(signedDecimalValue.value, radix)}`
-        : convertFromDecimalUnsigned(signedDecimalValue.value, radix);
-    }
-  }
-
-  return convertFromDecimalUnsigned(signedDecimalValue.value, radix);
-}
-
-function convertFromDecimalUnsigned(decimalValue: number, radix: number): string {
-  if (decimalValue === 0) {
-    return "0";
-  }
-
-  if (radix === 1) {
-    return R.join("", R.repeat("1", decimalValue));
-  }
-
-  let quotient = decimalValue;
-  let value = "";
-  while (quotient > 0) {
-    const remainder = quotient % radix;
-    quotient = Math.floor(quotient / radix);
-    value = R.concat(alphabet[remainder], value);
-  }
-  return value;
-}
-
-interface State {
-  value: string;
-  isValueDirty: boolean;
-  inputRadix: number | null;
-  outputRadix: number | null;
-  signedMode: boolean;
-  inputSignMode: SignMode | null;
-  outputSignMode: SignMode | null;
-}
-
-type Action =
-  | { type: "set-value", value: string }
-  | { type: "set-input-radix", inputRadix: number | null }
-  | { type: "set-output-radix", outputRadix: number | null }
-  | { type: "set-signed-mode", signedMode: boolean }
-  | { type: "set-input-sign-mode", inputSignMode: SignMode | null }
-  | { type: "set-output-sign-mode", outputSignMode: SignMode | null }
-  | { type: "swap", outputValue: string | null };
 
 const initialState: State = {
   value: "",
@@ -202,164 +56,16 @@ const initialState: State = {
   outputSignMode: null,
 };
 
-function reducer(draft: State, action: Action): void {
-  switch (action.type) {
-    case "set-value":
-      draft.value = action.value;
-      draft.isValueDirty = true;
-      return;
-    case "set-input-radix":
-      draft.inputRadix = action.inputRadix;
-
-      draft.inputSignMode = null;
-      draft.outputSignMode = null;
-
-      if (draft.signedMode) {
-        if (draft.inputRadix === 2) {
-          draft.outputRadix = 10;
-        }
-        if (draft.inputRadix === 10) {
-          draft.outputRadix = 2;
-        }
-      }
-
-      return;
-    case "set-output-radix":
-      draft.outputRadix = action.outputRadix;
-
-      draft.inputSignMode = null;
-      draft.outputSignMode = null;
-
-      if (draft.signedMode) {
-        if (draft.outputRadix === 2) {
-          draft.inputRadix = 10;
-        }
-        if (draft.outputRadix === 10) {
-          draft.inputRadix = 2;
-        }
-      }
-
-      return;
-    case "set-signed-mode":
-      draft.signedMode = action.signedMode;
-
-      draft.inputSignMode = null;
-      draft.outputSignMode = null;
-
-      // TODO: Refactor this - don't need to call filterRadixPresets for this
-      const allowedRadices = R.map(radixPreset => radixPreset.radix, filterRadixPresets(action.signedMode));
-
-      if (action.signedMode) {
-        if (!R.includes(draft.inputRadix, allowedRadices)) {
-          draft.inputRadix = allowedRadices[0];
-        }
-
-        if (!R.includes(draft.outputRadix, allowedRadices)) {
-          draft.outputRadix = allowedRadices[0];
-        }
-
-        if (draft.inputRadix === draft.outputRadix) {
-          draft.inputRadix = allowedRadices[0];
-          draft.outputRadix = allowedRadices[1];
-        }
-      }
-
-      return;
-    case "set-input-sign-mode":
-      draft.inputSignMode = action.inputSignMode;
-      return;
-    case "set-output-sign-mode":
-      draft.outputSignMode = action.outputSignMode;
-      return;
-    case "swap":
-      const tempRadix = draft.inputRadix;
-      draft.inputRadix = draft.outputRadix;
-      draft.outputRadix = tempRadix;
-
-      draft.value = action.outputValue ?? draft.value;
-
-      if (draft.signedMode) {
-        const tempSignMode = draft.inputSignMode;
-        draft.inputSignMode = draft.outputSignMode;
-        draft.outputSignMode = tempSignMode;
-      }
-
-      return;
-  }
-}
-
-function filterRadixPresets(signedMode: boolean) {
-  return signedMode
-    ? R.filter(radixPreset => !signedMode || R.includes(radixPreset.radix, [2, 10]), radixPresets)
-    : radixPresets;
-}
-
 function App() {
   const [state, dispatch] = useImmerReducer(reducer, initialState);
 
   const { colorMode, toggleColorMode } = useColorMode();
 
-  const allowedDigits = state.inputRadix === null ? [] : (
-    state.inputRadix === 1
-      ? ["1"]
-      : R.split("", R.slice(0, state.inputRadix, alphabet))
-  );
+  const allowedDigits = computeAllowedDigits(state.inputRadix);
 
-  const validateValue = (): string => {
-    if (R.isEmpty(state.value)) {
-      return "Value cannot be empty.";
-    }
-
-    if (validateRadix(state.inputRadix)) {
-      return "";
-    }
-
-    const containsOnlyAllowedDigits = (x: string): boolean => R.isEmpty(R.difference(R.split("", x.toUpperCase()), allowedDigits));
-
-    if (state.signedMode && state.inputRadix === 10) {
-      if (!containsOnlyAllowedDigits(state.value) && (R.head(state.value) !== "-" || R.isEmpty(R.tail(state.value)) || !containsOnlyAllowedDigits(R.tail(state.value)))) {
-        return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}. Value may start with a hyphen (-).`;
-      }
-    } else {
-      if (!containsOnlyAllowedDigits(state.value)) {
-        return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}.`;
-      }
-    }
-
-    return "";
-  };
-
-  const validateRadix = (radix: number | null): string => {
-    if (radix === null) {
-      return "Radix cannot be empty.";
-    }
-
-    if (state.signedMode && radix !== 2 && radix !== 10) {
-      return "Radix must be 2 or 10 in signed mode.";
-    }
-
-    if (radix <= 0) {
-      return "Radix must be greater than zero.";
-    }
-
-    if (radix > alphabet.length) {
-      return `Radix must be less than or equal to ${alphabet.length}`;
-    }
-
-    return "";
-  };
-
-  const validateSignMode = (signMode: SignMode | null, radix: number | null): string => {
-    if (state.signedMode && radix === 2 && signMode === null) {
-      return "Sign mode cannot be left blank.";
-    }
-
-    return "";
-  };
-
-  const isValid = !validateRadix(state.inputRadix) && !validateRadix(state.outputRadix) && !validateValue() && !validateSignMode(state.inputSignMode, state.inputRadix) && !validateSignMode(state.outputSignMode, state.outputRadix);
-  const outputValue = isValid ? convert(state.value, state.inputRadix, state.outputRadix, state.signedMode, state.inputSignMode, state.outputSignMode) : null;
-  const filteredRadixPresets = filterRadixPresets(state.signedMode);
+  const isValid = validate(state);
+  const outputValue = isValid ? convert(state) : null;
+  const filteredRadixPresets = getFilteredRadixPresets(state.signedMode);
 
   const setValue = (value: string) => dispatch({ type: "set-value", value });
   const setInputRadix = (inputRadix: number | null): void => dispatch({ type: "set-input-radix", inputRadix });
@@ -413,7 +119,7 @@ function App() {
             />
           </FormControl>
 
-          <FormControl id="value" isInvalid={state.isValueDirty && !!validateValue()}>
+          <FormControl id="value" isInvalid={state.isValueDirty && !!validateValue(state)}>
             <FormLabel>Value</FormLabel>
             <Input
               value={state.value}
@@ -428,7 +134,7 @@ function App() {
                   : `May only contain the following digits: ${R.join(", ", allowedDigits)}.`}
               </FormHelperText>
             )}
-            <FormErrorMessage>{validateValue()}</FormErrorMessage>
+            <FormErrorMessage>{validateValue(state)}</FormErrorMessage>
           </FormControl>
 
           <AnimatePresence>
@@ -436,7 +142,7 @@ function App() {
               <MotionFormControl
                 id="input-sign-mode"
                 as="fieldset"
-                isInvalid={!!validateSignMode(state.inputSignMode, state.inputRadix)}
+                isInvalid={!!validateInputSignMode(state)}
                 key="input-sign-mode"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -448,7 +154,7 @@ function App() {
                   setSignMode={setInputSignMode}
                 />
                 <FormHelperText>Select how negative values are represented in the input value.</FormHelperText>
-                <FormErrorMessage>{validateSignMode(state.inputSignMode, state.inputRadix)}</FormErrorMessage>
+                <FormErrorMessage>{validateInputSignMode(state)}</FormErrorMessage>
               </MotionFormControl>
             )}
           </AnimatePresence>
@@ -463,7 +169,7 @@ function App() {
                 filteredRadixPresets={filteredRadixPresets}
               />
             </FormControl>
-            <FormControl id="input-radix" isInvalid={!!validateRadix(state.inputRadix)}>
+            <FormControl id="input-radix" isInvalid={!!validateInputRadix(state)}>
               <FormLabel>Input radix</FormLabel>
               <RadixInput
                 radix={state.inputRadix}
@@ -476,7 +182,7 @@ function App() {
                   ? "Radix must be 2 or 10 in signed mode."
                   : "Any integer between 1 and 36 (inclusive)."}
               </FormHelperText>
-              <FormErrorMessage>{validateRadix(state.inputRadix)}</FormErrorMessage>
+              <FormErrorMessage>{validateInputRadix(state)}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>
 
@@ -489,7 +195,7 @@ function App() {
                 filteredRadixPresets={filteredRadixPresets}
               />
             </FormControl>
-            <FormControl id="output-radix" isInvalid={!!validateRadix(state.outputRadix)}>
+            <FormControl id="output-radix" isInvalid={!!validateOutputRadix(state)}>
               <FormLabel>Output radix</FormLabel>
               <RadixInput
                 radix={state.outputRadix}
@@ -502,7 +208,7 @@ function App() {
                   ? "Radix must be 2 or 10 in signed mode."
                   : "Any integer between 1 and 36 (inclusive)."}
               </FormHelperText>
-              <FormErrorMessage>{validateRadix(state.outputRadix)}</FormErrorMessage>
+              <FormErrorMessage>{validateOutputRadix(state)}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>
 
@@ -511,7 +217,7 @@ function App() {
               <MotionFormControl
                 id="output-sign-mode"
                 as="fieldset"
-                isInvalid={!!validateSignMode(state.outputSignMode, state.outputRadix)}
+                isInvalid={!!validateOutputSignMode(state)}
                 key="output-sign-mode"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -523,7 +229,7 @@ function App() {
                   setSignMode={setOutputSignMode}
                 />
                 <FormHelperText>Select how negative values are represented in the output value.</FormHelperText>
-                <FormErrorMessage>{validateSignMode(state.outputSignMode, state.outputRadix)}</FormErrorMessage>
+                <FormErrorMessage>{validateOutputSignMode(state)}</FormErrorMessage>
               </MotionFormControl>
             )}
           </AnimatePresence>

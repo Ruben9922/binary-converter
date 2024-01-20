@@ -1,3 +1,5 @@
+import * as R from "ramda";
+
 export interface RadixPreset {
   name: string;
   value: string;
@@ -31,3 +33,9 @@ export const radixPresets: RadixPreset[] = [
     radix: null,
   },
 ];
+
+export function getFilteredRadixPresets(signedMode: boolean) {
+  return signedMode
+    ? R.filter(radixPreset => !signedMode || R.includes(radixPreset.radix, [2, 10]), radixPresets)
+    : radixPresets;
+}

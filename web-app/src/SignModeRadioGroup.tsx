@@ -1,6 +1,6 @@
 import React from "react";
 import { HStack, Radio, RadioGroup } from "@chakra-ui/react";
-import { SignMode } from "./signMode";
+import { SignMode } from "./core/signMode";
 
 interface Props {
   signMode: SignMode | null;
