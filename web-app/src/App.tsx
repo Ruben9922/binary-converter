@@ -5,7 +5,7 @@ import { useImmerReducer } from "use-immer";
 import { convert } from "./core/convert";
 import reducer from "./core/reducer";
 import { SignMode } from "./core/signMode";
-import State from "./core/state";
+import { initialState } from "./core/state";
 import { validate } from "./core/validate";
 import InputRadixPreset from "./InputRadixPreset";
 import InputSignMode from "./InputSignMode";
@@ -16,16 +16,6 @@ import SignedMode from "./SignedMode";
 import SwapButton from "./SwapButton";
 import TitleBar from "./TitleBar";
 import Value from "./Value";
-
-const initialState: State = {
-  value: "",
-  isValueDirty: false,
-  inputRadix: 2,
-  outputRadix: 16,
-  signedMode: false,
-  inputSignMode: null,
-  outputSignMode: null,
-};
 
 function App() {
   const [state, dispatch] = useImmerReducer(reducer, initialState);
