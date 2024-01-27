@@ -3,24 +3,24 @@ import alphabet from "./alphabet";
 import { SignMode } from "./signMode";
 import State from "./state";
 
-export function validateValue(state: State): string {
-  if (R.isEmpty(state.value)) {
+export function validateValue(value: string, inputRadix: number | null, signedMode: boolean): string {
+  if (R.isEmpty(value)) {
     return "Value cannot be empty.";
   }
 
-  if (validateInputRadix(state)) {
+  if (validateRadix(inputRadix, signedMode)) {
     return "";
   }
 
-  const allowedDigits = computeAllowedDigits(state.inputRadix);
+  const allowedDigits = computeAllowedDigits(inputRadix);
   const containsOnlyAllowedDigits = (x: string): boolean => R.isEmpty(R.difference(R.split("", x.toUpperCase()), allowedDigits));
 
-  if (state.signedMode && state.inputRadix === 10) {
-    if (!containsOnlyAllowedDigits(state.value) && (R.head(state.value) !== "-" || R.isEmpty(R.tail(state.value)) || !containsOnlyAllowedDigits(R.tail(state.value)))) {
+  if (signedMode && inputRadix === 10) {
+    if (!containsOnlyAllowedDigits(value) && (R.head(value) !== "-" || R.isEmpty(R.tail(value)) || !containsOnlyAllowedDigits(R.tail(value)))) {
       return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}. Value may start with a hyphen (-).`;
     }
   } else {
-    if (!containsOnlyAllowedDigits(state.value)) {
+    if (!containsOnlyAllowedDigits(value)) {
       return `Value may only contain the following digits: ${R.join(", ", allowedDigits)}.`;
     }
   }
@@ -28,15 +28,7 @@ export function validateValue(state: State): string {
   return "";
 }
 
-export function validateInputRadix(state: State): string {
-  return validateRadix(state.inputRadix, state.signedMode);
-}
-
-export function validateOutputRadix(state: State): string {
-  return validateRadix(state.outputRadix, state.signedMode);
-}
-
-function validateRadix(radix: number | null, signedMode: boolean): string {
+export function validateRadix(radix: number | null, signedMode: boolean): string {
   if (radix === null) {
     return "Radix cannot be empty.";
   }
@@ -56,15 +48,7 @@ function validateRadix(radix: number | null, signedMode: boolean): string {
   return "";
 }
 
-export function validateInputSignMode(state: State): string {
-  return validateSignMode(state.inputSignMode, state.inputRadix, state.signedMode);
-}
-
-export function validateOutputSignMode(state: State): string {
-  return validateSignMode(state.outputSignMode, state.outputRadix, state.signedMode);
-}
-
-function validateSignMode(signMode: SignMode | null, radix: number | null, signedMode: boolean): string {
+export function validateSignMode(signMode: SignMode | null, radix: number | null, signedMode: boolean): string {
   if (signedMode && radix === 2 && signMode === null) {
     return "Sign mode cannot be left blank.";
   }
@@ -81,5 +65,9 @@ export function computeAllowedDigits(inputRadix: number | null): string[] {
 }
 
 export function validate(state: State): boolean {
-  return !validateInputRadix(state) && !validateOutputRadix(state) && !validateValue(state) && !validateInputSignMode(state) && !validateOutputSignMode(state);
+  return !validateRadix(state.inputRadix, state.signedMode)
+    && !validateRadix(state.outputRadix, state.signedMode)
+    && !validateValue(state.value, state.inputRadix, state.signedMode)
+    && !validateSignMode(state.inputSignMode, state.inputRadix, state.signedMode)
+    && !validateSignMode(state.outputSignMode, state.outputRadix, state.signedMode);
 }
