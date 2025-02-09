@@ -11,20 +11,20 @@ on:
       - 'master'
     paths:
       - '.github/workflows/build-deploy.yml'
-      - 'web-app/**'
+      - 'apps/web/**'
   pull_request:
     branches:
       - 'master'
     paths:
       - '.github/workflows/build-deploy.yml'
-      - 'web-app/**'
+      - 'apps/web/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./web-app
+        working-directory: ./apps/web
 
     steps:
     - name: Checkout code
@@ -34,7 +34,7 @@ jobs:
       with:
         node-version: lts/*
         cache: 'npm'
-        cache-dependency-path: 'web-app/package-lock.json'
+        cache-dependency-path: 'apps/web/package-lock.json'
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
